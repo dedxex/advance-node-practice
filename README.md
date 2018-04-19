@@ -1,2 +1,2 @@
-# AdvancedNodeStarter
-Starting project for a course on Advanced Node @ Udemy
+# Advance node practice
+Taranjeet Singh
