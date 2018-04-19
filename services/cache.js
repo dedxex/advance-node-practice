@@ -7,26 +7,23 @@ client.get = util.promisify(client.get);
 
 const exec = mongoose.Query.prototype.exec;
 
-mongoose.Query.exec = async function(params) {
+mongoose.Query.prototype.exec = async function(params) {
     //make key
-    const key = Object.assign({},this.getQuery(),{ collection : this.mongooseCollection.name })
+    const key = JSON.stringify(Object.assign({},this.getQuery(),{ collection : this.mongooseCollection.name }))
     
     const cachedValue = await client.get(key);
     if(cachedValue) {
-        console.log("redis cache")
         const doc = JSON.parse(cachedValue);
+        console.log("doc is")
         return Array.isArray(doc)
         ? doc.map(d => new this.model(d))
-        : new this.model(d)
+        : new this.model(doc)
     }
-
-    console.log("outside redis")
-
-    //else execute original mongoose exec
-    const result = await exec.apply(this,this.arguments);
+    //else execute original mongoose exec 
+    console.log("exec outside"); 
+    const result = await exec.apply(this,arguments);
     client.set(key,JSON.stringify(result));
     return result;
-
 
 }
 
