@@ -14,8 +14,12 @@ module.exports = app => {
   });
 
   app.get('/api/blogs', requireLogin, async (req, res) => {
-    const blogs = await Blog.find({ _user: req.user.id });
-
+    const blogs = await Blog.find({ _user: req.user.id })
+    .useCache({
+      key : req.user.id
+    });
+    console.log("user id",req.user.id);
+    
     res.send(blogs);
   });
 

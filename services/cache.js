@@ -3,27 +3,33 @@ const redis = require('redis');
 const util = require('util');
 const redisUrl = "redis://127.0.0.1:6379";
 const client = redis.createClient(redisUrl);
-client.get = util.promisify(client.get);
-
+client.hget = util.promisify(client.hget);
 const exec = mongoose.Query.prototype.exec;
 
-mongoose.Query.prototype.exec = async function(params) {
+mongoose.Query.prototype.useCache = function(options = {}) {
+    this.isCached = true;
+    this.hashkey = JSON.stringify(options.key || '')
+    return this;
+}
+
+async function doRedisOperations() {
     //make key
     const key = JSON.stringify(Object.assign({},this.getQuery(),{ collection : this.mongooseCollection.name }))
-    
-    const cachedValue = await client.get(key);
+    const cachedValue = await client.hget(this.hashkey,key);
     if(cachedValue) {
         const doc = JSON.parse(cachedValue);
-        console.log("doc is")
-        return Array.isArray(doc)
-        ? doc.map(d => new this.model(d))
-        : new this.model(doc)
+        console.log("redis inside")
+        return Array.isArray(doc) ? doc.map(d => new this.model(d)) : new this.model(doc)
     }
     //else execute original mongoose exec 
-    console.log("exec outside"); 
+    console.log("exec outside redis"); 
     const result = await exec.apply(this,arguments);
-    client.set(key,JSON.stringify(result));
+    client.hset(this.hashkey,key,JSON.stringify(result));
     return result;
+}
 
+mongoose.Query.prototype.exec = async function() {
+    if(this.isCached === true) return await doRedisOperations.apply(this)
+    else return await exec.apply(this,arguments);
 }
 
