@@ -1,13 +1,13 @@
 const puppeteer = require('puppeteer');
-jest.setTimeout(100000);
+jest.setTimeout(10000);
 let browser,page;
 beforeEach( async () => {
     browser = await puppeteer.launch({
-        headless : true,
+        headless : false,
         args : ['--no-sandbox']
     });
     page = await browser.newPage();
-    await page.goto("localhost:3000")
+    await page.goto("http://localhost:3000")
 })
 
 afterEach ( async () => {
