@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer');
-
+jest.setTimeout(100000);
 let browser,page;
 beforeEach( async () => {
     browser = await puppeteer.launch({
