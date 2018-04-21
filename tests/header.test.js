@@ -14,7 +14,7 @@ afterEach ( async () => {
     await browser.close();
 })
 
-test("we can lauch a browser", async () => {
+test("we can see blogster logo", async () => {
     const text = await page.$eval("a.brand-logo", el => el.innerHTML);
     expect(text).toEqual("Blogster")
 })
